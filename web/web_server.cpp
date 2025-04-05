@@ -7,7 +7,8 @@
 namespace fs = std::filesystem;
 using namespace httplib;
 
-// Helper function to generate the full HTML with video grid
+// function to generate the full HTML with video grid
+// can fix this to whatever later
 std::string generateHTML() {
     std::ostringstream html;
 
@@ -42,9 +43,9 @@ int main() {
 
     std::cout << "Server running at http://localhost:8080\n";
 
-    // ADD THIS TO CATCH FAILURE
+    // Catch fail
     if (!svr.listen("0.0.0.0", 8080)) {
-        std::cerr << "❌ Failed to bind to port 8080. Maybe it's already in use?\n";
+        std::cerr << "Failed to bind to port 8080. Maybe it's already in use? Try 'lsof -i :8080' then 'kill <PID#>'\n";
     }
 
     return 0;
