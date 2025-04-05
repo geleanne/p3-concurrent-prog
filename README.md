@@ -1,5 +1,5 @@
-# ✅ FOR MACOS / LINUX
-```bash
+# FOR MACOS / LINUX
+
 ## Compile both components (requires C++17)
 g++ consumer/consumer.cpp -o consumer.out -std=c++17
 g++ producer/producer.cpp -o producer.out -std=c++17
