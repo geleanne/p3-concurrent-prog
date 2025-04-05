@@ -63,7 +63,7 @@ int main() {
     std::vector<std::thread> threads;
 
     for (int i = 0; i < numProducers; ++i) {
-        std::string folder = "videos" + std::to_string(i + 1); // for videos1/, videos2/, ...
+        std::string folder = "shared/videos" + std::to_string(i + 1);
         threads.emplace_back([folder]() {
             sendVideosFromFolder(folder);
         });
