@@ -8,6 +8,13 @@
 </head>
 <body>
   <h1>Uploaded Videos</h1>
+
+  <!-- Upload Form -->
+  <form method="POST" action="/upload" enctype="multipart/form-data">
+    <input type="file" name="video" accept="video/mp4" required />
+    <button type="submit">Upload</button>
+  </form>ß
+
   <div class="video-grid">
     <video class="video-thumb" src="uploads/vid1.mp4#t=0,10" muted autoplay loop></video>
     <video class="video-thumb" src="uploads/vid2.mp4#t=0,10" muted autoplay loop></video>
