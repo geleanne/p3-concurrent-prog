@@ -29,7 +29,6 @@ void sendVideosFromFolder(const std::string& folderPath) {
             // TODO: if we use vm, cange this to the consumer VM IP 
             inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr); 
 
-            // if fail
             if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
                 std::cerr << "Connection failed for: " << filePath << "\n";
                 close(sock);
@@ -48,7 +47,10 @@ void sendVideosFromFolder(const std::string& folderPath) {
                 send(sock, buffer, in.gcount(), 0);
             }
 
-            // if it reaches here, success 
+            // try signal end of transmission
+            shutdown(sock, SHUT_WR);
+            sleep(1); // try allow time for consumer to finish reading
+
             std::cout << "Sent: " << filePath << std::endl;
             in.close();
             close(sock);
@@ -60,6 +62,7 @@ int main() {
     int numProducers;
     std::cout << "Enter number of producer threads: ";
     std::cin >> numProducers;
+
     std::vector<std::thread> threads;
 
     for (int i = 0; i < numProducers; ++i) {
@@ -68,8 +71,10 @@ int main() {
             sendVideosFromFolder(folder);
         });
     }
+
     for (auto& t : threads) {
         t.join();
     }
+
     return 0;
 }
