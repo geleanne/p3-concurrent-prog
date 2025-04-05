@@ -4,26 +4,72 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <vector>
+#include <thread>
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+// Function to send all videos from a folder over TCP
+void sendVideosFromFolder(const std::string& folderPath) {
+    for (const auto& entry : fs::directory_iterator(folderPath)) {
+        if (entry.is_regular_file()) {
+            std::string filePath = entry.path().string();
+
+            int sock = socket(AF_INET, SOCK_STREAM, 0);
+            if (sock < 0) {
+                std::cerr << "Socket creation failed for: " << filePath << "\n";
+                continue;
+            }
+
+            sockaddr_in serv_addr{};
+            serv_addr.sin_family = AF_INET;
+            serv_addr.sin_port = htons(8080);
+
+            // TODO: if we use vm, cange this to the consumer VM IP 
+            inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr); 
+
+            // if fail
+            if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+                std::cerr << "Connection failed for: " << filePath << "\n";
+                close(sock);
+                continue;
+            }
+            std::ifstream in(filePath, std::ios::binary);
+            if (!in) {
+                std::cerr << "Failed to open file: " << filePath << "\n";
+                close(sock);
+                continue;
+            }
+
+            char buffer[1024];
+            while (!in.eof()) {
+                in.read(buffer, sizeof(buffer));
+                send(sock, buffer, in.gcount(), 0);
+            }
+
+            // if it reaches here, success 
+            std::cout << "Sent: " << filePath << std::endl;
+            in.close();
+            close(sock);
+        }
+    }
+}
 
 int main() {
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    sockaddr_in serv_addr;
+    int numProducers;
+    std::cout << "Enter number of producer threads: ";
+    std::cin >> numProducers;
+    std::vector<std::thread> threads;
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(8080);
-    inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr); // change to VM IP
-
-    connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
-    std::ifstream in("video.mp4", std::ios::binary);
-
-    char buffer[1024];
-    while (!in.eof()) {
-        in.read(buffer, sizeof(buffer));
-        send(sock, buffer, in.gcount(), 0);
+    for (int i = 0; i < numProducers; ++i) {
+        std::string folder = "videos" + std::to_string(i + 1); // for videos1/, videos2/, ...
+        threads.emplace_back([folder]() {
+            sendVideosFromFolder(folder);
+        });
     }
-
-    std::cout << "File sent.\n";
-    in.close();
-    close(sock);
+    for (auto& t : threads) {
+        t.join();
+    }
     return 0;
 }

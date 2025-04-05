@@ -1,21 +1,22 @@
-### FOR MACOS
-# Compile both components
-g++ consumer/consumer.cpp -o consumer.out
-g++ producer/producer.cpp -o producer.out
+# ✅ FOR MACOS / LINUX
+```bash
+## Compile both components (requires C++17)
+g++ consumer/consumer.cpp -o consumer.out -std=c++17
+g++ producer/producer.cpp -o producer.out -std=c++17
 
-# In Terminal 1 (run the consumer/server)
+## In Terminal 1 (run the consumer/server)
 ./consumer.out
 
-# In Terminal 2 (run the producer/client)
+## In Terminal 2 (run the producer/client)
 ./producer.out
 
-### FOR WINDOWSOS (pls check if this works i just ask chatgpt to make this)
-# Compile both components
-g++ consumer/consumer.cpp -o consumer.exe -lws2_32
-g++ producer/producer.cpp -o producer.exe -lws2_32
+# FOR WINDOWS0S
+##  Compile both components
+g++ consumer/consumer.cpp -o consumer.exe -std=c++17 -lws2_32
+g++ producer/producer.cpp -o producer.exe -std=c++17 -lws2_32
 
-# In Terminal 1 (run the consumer/server)
+## In Command Prompt 1 (run the consumer/server)
 consumer.exe
 
-# In Terminal 2 (run the producer/client)
+## In Command Prompt 2 (run the producer/client)
 producer.exe
