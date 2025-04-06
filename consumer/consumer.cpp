@@ -7,20 +7,17 @@
 #include <arpa/inet.h>
 #include <filesystem>
 #include <thread>
-#include <mutex>
-#include <queue>
-#include <condition_variable>
 #include <vector>
 #include <chrono>
+#include "../shared/queue.h"  // Include your thread-safe queue
 
 namespace fs = std::filesystem;
 
 const int PORT = 8080;
 const int MAX_QUEUE_SIZE = 5;
+const int NUM_THREADS = 4;
 
-std::mutex queue_mutex;
-std::condition_variable queue_cv;
-std::queue<int> socket_queue;
+ThreadSafeQueue<int> socket_queue(MAX_QUEUE_SIZE);
 bool running = true;
 
 void handle_client(int client_socket) {
@@ -47,15 +44,7 @@ void handle_client(int client_socket) {
 
 void consumer_thread() {
     while (running) {
-        std::unique_lock<std::mutex> lock(queue_mutex);
-        queue_cv.wait(lock, [] { return !socket_queue.empty() || !running; });
-
-        if (!running && socket_queue.empty()) return;
-
-        int client_socket = socket_queue.front();
-        socket_queue.pop();
-        lock.unlock();
-
+        int client_socket = socket_queue.dequeue(); // thread-safe dequeue
         handle_client(client_socket);
     }
 }
@@ -94,9 +83,8 @@ int main() {
 
     std::cout << "Waiting for connections on port " << PORT << "...\n";
 
-    const int num_threads = 4;
     std::vector<std::thread> consumers;
-    for (int i = 0; i < num_threads; ++i) {
+    for (int i = 0; i < NUM_THREADS; ++i) {
         consumers.emplace_back(consumer_thread);
     }
 
@@ -107,18 +95,15 @@ int main() {
             continue;
         }
 
-        std::unique_lock<std::mutex> lock(queue_mutex);
-        if (socket_queue.size() >= MAX_QUEUE_SIZE) {
+        if (socket_queue.isFull()) {
             std::cerr << "Queue full, dropping connection (leaky bucket)\n";
             close(new_socket);
         } else {
-            socket_queue.push(new_socket);
-            queue_cv.notify_one();
+            socket_queue.enqueue(new_socket);
         }
     }
 
     running = false;
-    queue_cv.notify_all();
     for (auto& t : consumers) {
         t.join();
     }
