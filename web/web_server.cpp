@@ -13,14 +13,10 @@ std::string generateHTML() {
     std::ostringstream html;
 
     html << "<!DOCTYPE html><html><head><title>Uploaded Videos</title>"
-         << "<style>"
-         << "body { font-family: sans-serif; text-align: center; background: #f5f5f5; }"
-         << "form { margin: 20px; }"
-         << ".video-grid { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; padding: 20px; }"
-         << "video { width: 300px; border-radius: 8px; border: 2px solid #ccc; }"
-         << "</style></head><body>";
+         << "<link rel='stylesheet' href='/style.css'>"
+         << "</head><body>";
 
-    html << "<h1>Uploaded Videos</h1>";
+    html << "<h1>hiiii</h1>";
 
     // Upload form
     html << "<form method='POST' action='/upload' enctype='multipart/form-data'>"
@@ -32,7 +28,7 @@ std::string generateHTML() {
     for (const auto& file : fs::directory_iterator("web/uploads")) {
         if (file.path().extension() == ".mp4") {
             std::string filename = file.path().filename().string();
-            html << "<video src='/uploads/" << filename << "' controls muted></video>";
+            html << "<video class='video-thumb' src='/uploads/" << filename << "#t=0,10' muted autoplay loop></video>";
         }
     }
     html << "</div></body></html>";
@@ -42,15 +38,16 @@ std::string generateHTML() {
 int main() {
     httplib::Server svr;
 
-    // uploaded files
+    // Serve video uploads and style.css
     svr.set_mount_point("/uploads", "./web/uploads");
+    svr.set_mount_point("/", "./web"); // serves style.css from /web
 
-    // dynamic homepage
+    // GET /
     svr.Get("/", [](const Request& req, Response& res) {
         res.set_content(generateHTML(), "text/html");
     });
 
-    // file uploads
+    // POST /upload
     svr.Post("/upload", [](const Request& req, Response& res) {
         const auto& files = req.files;
         auto it = files.find("video");
@@ -74,7 +71,7 @@ int main() {
     std::cout << "Server running at http://localhost:8080\n";
 
     if (!svr.listen("0.0.0.0", 8080)) {
-        std::cerr << "Failed to bind to port 8080. Maybe it's already in use? Try 'lsof -i :8080' then 'kill <PID>'\n";
+        std::cerr << "Failed to bind to port 8080. Maybe it's already in use?\n";
     }
     return 0;
 }
