@@ -1,54 +1,128 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <unistd.h>
+#include <arpa/inet.h>
 #include <filesystem>
 #include <thread>
+#include <mutex>
+#include <queue>
+#include <condition_variable>
 #include <vector>
+#include <chrono>
 
 namespace fs = std::filesystem;
 
-void handleClient(int socket_fd, int client_id) {
-    std::string filename = "web/uploads/video_" + std::to_string(client_id) + ".mp4";
+const int PORT = 8080;
+const int MAX_QUEUE_SIZE = 5;
+
+std::mutex queue_mutex;
+std::condition_variable queue_cv;
+std::queue<int> socket_queue;
+bool running = true;
+
+void handle_client(int client_socket) {
+    auto timestamp = std::chrono::system_clock::now().time_since_epoch().count();
+    std::string filename = "web/uploads/video_" + std::to_string(timestamp) + ".mp4";
     std::ofstream out(filename, std::ios::binary);
 
+    if (!out.is_open()) {
+        std::cerr << "Failed to create file: " << filename << "\n";
+        close(client_socket);
+        return;
+    }
+
     char buffer[1024];
-    int bytesRead;
-    while ((bytesRead = read(socket_fd, buffer, sizeof(buffer))) > 0) {
+    ssize_t bytesRead;
+    while ((bytesRead = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
         out.write(buffer, bytesRead);
     }
+
+    std::cout << "File received and saved to " << filename << "\n";
     out.close();
-    close(socket_fd);
-    std::cout << "[Thread " << client_id << "] File saved to " << filename << "\n";
+    close(client_socket);
+}
+
+void consumer_thread() {
+    while (running) {
+        std::unique_lock<std::mutex> lock(queue_mutex);
+        queue_cv.wait(lock, [] { return !socket_queue.empty() || !running; });
+
+        if (!running && socket_queue.empty()) return;
+
+        int client_socket = socket_queue.front();
+        socket_queue.pop();
+        lock.unlock();
+
+        handle_client(client_socket);
+    }
 }
 
 int main() {
+    fs::create_directories("web/uploads");
+
     int server_fd;
     sockaddr_in address;
-    int addrlen = sizeof(address);
-    fs::create_directories("web/uploads"); // upload directory
+    socklen_t addrlen = sizeof(address);
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd == -1) {
+        perror("Socket failed");
+        return 1;
+    }
+
+    int opt = 1;
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
     address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY; // accept from any IP
-    address.sin_port = htons(8080);
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
 
-    bind(server_fd, (struct sockaddr*)&address, sizeof(address));
-    listen(server_fd, 5);
+    if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
+        perror("Bind failed");
+        close(server_fd);
+        return 1;
+    }
 
-    std::cout << "Consumer listening on port 8080...\n";
+    if (listen(server_fd, 5) < 0) {
+        perror("Listen failed");
+        close(server_fd);
+        return 1;
+    }
 
-    int client_id = 0;
+    std::cout << "Waiting for connections on port " << PORT << "...\n";
+
+    const int num_threads = 4;
+    std::vector<std::thread> consumers;
+    for (int i = 0; i < num_threads; ++i) {
+        consumers.emplace_back(consumer_thread);
+    }
+
     while (true) {
-        int new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
-        if (new_socket >= 0) {
-            std::thread(handleClient, new_socket, client_id++).detach();  // run in background
+        int new_socket = accept(server_fd, (struct sockaddr*)&address, &addrlen);
+        if (new_socket < 0) {
+            perror("Accept failed");
+            continue;
+        }
+
+        std::unique_lock<std::mutex> lock(queue_mutex);
+        if (socket_queue.size() >= MAX_QUEUE_SIZE) {
+            std::cerr << "Queue full, dropping connection (leaky bucket)\n";
+            close(new_socket);
         } else {
-            std::cerr << "Failed to accept connection.\n";
+            socket_queue.push(new_socket);
+            queue_cv.notify_one();
         }
     }
+
+    running = false;
+    queue_cv.notify_all();
+    for (auto& t : consumers) {
+        t.join();
+    }
+
     close(server_fd);
     return 0;
 }
