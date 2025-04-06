@@ -9,6 +9,7 @@ namespace fs = std::filesystem;
 using namespace httplib;
 
 // Generate dynamic HTML with upload form and video grid
+// basically acts as the index.html but makes it easier for reloading
 std::string generateHTML() {
     std::ostringstream html;
 
@@ -16,7 +17,14 @@ std::string generateHTML() {
          << "<link rel='stylesheet' href='/style.css'>"
          << "</head><body>";
 
-    html << "<h1>hiiii</h1>";
+    html << "<h1>Producer-Consumer Media Upload</h1>";
+
+    html << "<p class='description'>"
+         << "This project is a simulation of a media upload system built in C++. "
+         << "Videos are uploaded via producers and received by consumers running on separate VM. "
+         << "The consumer web interface (HTML/CSS) previews the first 10 seconds of each video. "
+         << "Deployment is done locally using a lightweight C++ HTTP server."
+         << "</p>";
 
     // Upload form
     html << "<form method='POST' action='/upload' enctype='multipart/form-data'>"
@@ -25,11 +33,17 @@ std::string generateHTML() {
 
     // Video grid
     html << "<div class='video-grid'>";
+    bool hasVideo = false;
     for (const auto& file : fs::directory_iterator("web/uploads")) {
         if (file.path().extension() == ".mp4") {
+            hasVideo = true;
             std::string filename = file.path().filename().string();
-            html << "<video class='video-thumb' src='/uploads/" << filename << "#t=0,10' muted autoplay loop></video>";
+            html << "<video class='video-thumb' src='/uploads/" << filename
+                 << "#t=0,10' muted loop controls></video>";
         }
+    }
+    if (!hasVideo) {
+        html << "<p>No videos uploaded yet.</p>";
     }
     html << "</div></body></html>";
     return html.str();

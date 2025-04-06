@@ -29,7 +29,20 @@ video {
   cursor: pointer;
   background: black;
 }
+
 video:hover {
   transform: scale(1.05);
   border-color: #888;
+}
+
+.description {
+  max-width: 800px;
+  margin: 0 auto 20px;
+  font-size: 16px;
+  color: #444;
+  line-height: 1.6;
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
