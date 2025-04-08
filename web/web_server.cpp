@@ -16,44 +16,18 @@ std::string generateHTML() {
 
     html << "<!DOCTYPE html><html><head><title>Uploaded Videos</title>"
          << "<link rel='stylesheet' href='/style.css'>"
-         << "<style>"
-         << ".video-card {"
-         << "  margin-bottom: 20px;"
-         << "  text-align: center;"
-         << "}"
-         << ".video-card video {"
-         << "  width: 300px;"
-         << "  border-radius: 10px;"
-         << "  border: 2px solid #ccc;"
-         << "  transition: transform 0.2s ease;"
-         << "  background: black;"
-         << "}"
-         << ".video-card video:hover {"
-         << "  transform: scale(1.05);"
-         << "  border-color: #888;"
-         << "}"
-         << ".video-label {"
-         << "  font-size: 14px;"
-         << "  margin-top: 5px;"
-         << "  color: #333;"
-         << "}"
-         << "</style>"
          << "</head><body>";
 
-    html << "<h1>Producer-Consumer Media Upload</h1>";
-
-    html << "<p class='description'>"
-         << "This project is a simulation of a media upload system built in C++. "
-         << "Videos are uploaded via producers and received by consumers running on separate VM. "
-         << "The consumer web interface (HTML/CSS) previews the first 10 seconds of each video. "
-         << "Deployment is done locally using a lightweight C++ HTTP server."
-         << "</p>";
+    html << "<h1>📤 Upload a Video</h1>";
+    html << "<p class='description'>Select an MP4 file below and upload it to preview.</p>";
 
     html << "<form method='POST' action='/upload' enctype='multipart/form-data'>"
          << "<input type='file' name='video' accept='video/mp4' required />"
          << "<button type='submit'>Upload</button></form>";
 
+    html << "<h2>🎞 Uploaded Videos</h2>";
     html << "<div class='video-grid'>";
+    
     bool hasVideo = false;
     for (const auto& file : fs::directory_iterator("web/uploads")) {
         if (file.path().extension() == ".mp4") {
@@ -65,9 +39,11 @@ std::string generateHTML() {
                  << "</div>";
         }
     }
+
     if (!hasVideo) {
         html << "<p>No videos uploaded yet.</p>";
     }
+
     html << "</div></body></html>";
     return html.str();
 }
