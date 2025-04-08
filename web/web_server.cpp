@@ -27,7 +27,7 @@ std::string generateHTML() {
 
     html << "<h2>🎞 Uploaded Videos</h2>";
     html << "<div class='video-grid'>";
-    
+
     bool hasVideo = false;
     for (const auto& file : fs::directory_iterator("web/uploads")) {
         if (file.path().extension() == ".mp4") {
@@ -35,6 +35,7 @@ std::string generateHTML() {
             std::string filename = file.path().filename().string();
             html << "<div class='video-card'>"
                  << "<video src='/uploads/" << filename << "#t=0,10' muted loop controls></video>"
+                 << "<div class='overlay'>🔍 Previewing...</div>"
                  << "<div class='video-label'>" << filename << "</div>"
                  << "</div>";
         }
