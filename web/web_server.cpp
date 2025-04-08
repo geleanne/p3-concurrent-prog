@@ -14,9 +14,11 @@ using namespace httplib;
 std::string generateHTML() {
     std::ostringstream html;
 
-    html << "<!DOCTYPE html><html><head><title>Uploaded Videos</title>"
-         << "<link rel='stylesheet' href='/style.css'>"
-         << "</head><body>";
+    html << "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
+        << "<title>Uploaded Videos</title>"
+        << "<link rel='stylesheet' href='/style.css'>"
+        << "</head><body>";
+
 
     html << "<h1>📤 Upload a Video</h1>";
     html << "<p class='description'>Select an MP4 file below and upload it to preview.</p>";

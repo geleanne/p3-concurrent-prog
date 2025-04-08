@@ -52,7 +52,7 @@ void sendVideosFromFolder(const std::string& folderPath) {
             sockaddr_in serv_addr{};
             serv_addr.sin_family = AF_INET;
             serv_addr.sin_port = htons(8080);
-            inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr); 
+            inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr); // replace with server IP if needed
 
             if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
                 std::cerr << "Connection failed for: " << filePath << "\n";
@@ -83,3 +83,23 @@ void sendVideosFromFolder(const std::string& folderPath) {
     }
 }
 
+int main() {
+    int numProducers;
+    std::cout << "Enter number of producer threads: ";
+    std::cin >> numProducers;
+
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < numProducers; ++i) {
+        std::string folder = "shared/videos" + std::to_string(i + 1);
+        threads.emplace_back([folder]() {
+            sendVideosFromFolder(folder);
+        });
+    }
+
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    return 0;
+}
