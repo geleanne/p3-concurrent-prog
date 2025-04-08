@@ -10,11 +10,34 @@ using namespace httplib;
 
 // Generate dynamic HTML with upload form and video grid
 // basically acts as the index.html but makes it easier for reloading
+// updated
 std::string generateHTML() {
     std::ostringstream html;
 
     html << "<!DOCTYPE html><html><head><title>Uploaded Videos</title>"
          << "<link rel='stylesheet' href='/style.css'>"
+         << "<style>"
+         << ".video-card {"
+         << "  margin-bottom: 20px;"
+         << "  text-align: center;"
+         << "}"
+         << ".video-card video {"
+         << "  width: 300px;"
+         << "  border-radius: 10px;"
+         << "  border: 2px solid #ccc;"
+         << "  transition: transform 0.2s ease;"
+         << "  background: black;"
+         << "}"
+         << ".video-card video:hover {"
+         << "  transform: scale(1.05);"
+         << "  border-color: #888;"
+         << "}"
+         << ".video-label {"
+         << "  font-size: 14px;"
+         << "  margin-top: 5px;"
+         << "  color: #333;"
+         << "}"
+         << "</style>"
          << "</head><body>";
 
     html << "<h1>Producer-Consumer Media Upload</h1>";
@@ -26,20 +49,20 @@ std::string generateHTML() {
          << "Deployment is done locally using a lightweight C++ HTTP server."
          << "</p>";
 
-    // Upload form
     html << "<form method='POST' action='/upload' enctype='multipart/form-data'>"
          << "<input type='file' name='video' accept='video/mp4' required />"
          << "<button type='submit'>Upload</button></form>";
 
-    // Video grid
     html << "<div class='video-grid'>";
     bool hasVideo = false;
     for (const auto& file : fs::directory_iterator("web/uploads")) {
         if (file.path().extension() == ".mp4") {
             hasVideo = true;
             std::string filename = file.path().filename().string();
-            html << "<video class='video-thumb' src='/uploads/" << filename
-                 << "#t=0,10' muted loop controls></video>";
+            html << "<div class='video-card'>"
+                 << "<video src='/uploads/" << filename << "#t=0,10' muted loop controls></video>"
+                 << "<div class='video-label'>" << filename << "</div>"
+                 << "</div>";
         }
     }
     if (!hasVideo) {
@@ -48,6 +71,7 @@ std::string generateHTML() {
     html << "</div></body></html>";
     return html.str();
 }
+
 
 int main() {
     httplib::Server svr;

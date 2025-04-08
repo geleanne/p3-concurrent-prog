@@ -46,3 +46,14 @@ video:hover {
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
+
+.video-card {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.video-label {
+  font-size: 14px;
+  margin-top: 5px;
+  color: #333;
+}
