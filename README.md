@@ -1,8 +1,14 @@
 # P3 Networked Producer and Consumer
 
+This project simulates a media upload system using C++ producers and consumers communicating via sockets. Videos are uploaded concurrently, saved, and previewed on a web interface. It runs entirely in Docker, showcasing multithreading, networking, and a live video frontend.
+
 <img width="827" alt="Screenshot 2025-04-12 at 6 23 52 PM" src="https://github.com/user-attachments/assets/923b02ba-9aa4-4b4a-a1de-401051ac30b3" />
 
-This project simulates a media upload system using C++ producers and consumers communicating via sockets. Videos are uploaded concurrently, saved, and previewed on a web interface. It runs entirely in Docker, showcasing multithreading, networking, and a live video frontend.
+### Authors: STDISCM S12 discm buddies 
+- BERNARDO, ERICA MONTEMAYOR
+- ATIENZA, MARIELLE ANGELENE
+- RIVERA, JOSE CARLOS IGNACIO
+- TIGHE, KAITLYN PATRICIA
 
 Included in this repository are:
 1. Source code (including bonus functions for queue is full & duplication detection only)
