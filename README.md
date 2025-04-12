@@ -7,7 +7,8 @@ This project simulates a media upload system using C++ producers and consumers c
 Included in this repository are:
 1. Source code (including bonus functions for queue is full & duplication detection only)
 3. Presentation Slides for Further Discussion
-4. Demo Video
+4. [P3 Demo Video](https://www.youtube.com/watch?v=ajK4hW14-zQ) - timestamps available in the description of the video 
+
 
 
 # Build instructions (on MacOs)
