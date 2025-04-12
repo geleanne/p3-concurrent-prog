@@ -15,10 +15,9 @@ std::string generateHTML() {
     std::ostringstream html;
 
     html << "<!DOCTYPE html><html><head><meta charset='UTF-8'>"
-        << "<title>Uploaded Videos</title>"
-        << "<link rel='stylesheet' href='/style.css'>"
-        << "</head><body>";
-
+         << "<title>Uploaded Videos</title>"
+         << "<link rel='stylesheet' href='/style.css'>"
+         << "</head><body>";
 
     html << "<h1>📤 Upload a Video</h1>";
     html << "<p class='description'>Select an MP4 file below and upload it to preview.</p>";
@@ -36,7 +35,7 @@ std::string generateHTML() {
             hasVideo = true;
             std::string filename = file.path().filename().string();
             html << "<div class='video-card'>"
-                 << "<video src='/uploads/" << filename << "#t=0,10' muted loop controls></video>"
+                 << "<video class='hover-video' src='/uploads/" << filename << "#t=0,10' muted loop controls></video>"
                  << "<div class='overlay'>🔍 Previewing...</div>"
                  << "<div class='video-label'>" << filename << "</div>"
                  << "</div>";
@@ -47,7 +46,15 @@ std::string generateHTML() {
         html << "<p>No videos uploaded yet.</p>";
     }
 
-    html << "</div></body></html>";
+    html << "</div>";  // close video-grid
+    // **JavaScript** to handle hover preview
+    html << "<script>"
+         << "document.querySelectorAll('.hover-video').forEach(v => {"
+         << "v.addEventListener('mouseenter', () => v.play());"
+         << "v.addEventListener('mouseleave', () => v.pause());"
+         << "});"
+         << "</script>";
+    html << "</body></html>";  // properly close body and html
     return html.str();
 }
 
