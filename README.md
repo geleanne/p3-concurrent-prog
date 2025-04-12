@@ -1,37 +1,27 @@
-# FOR MACOS / LINUX
+# Step 1: Build Docker Images
+docker build -t consumer-app -f consumer/Dockerfile .
+docker build -t producer-app -f producer/Dockerfile .
+docker build -t web-server-app -f web/Dockerfile .
 
-## Compile all components (requires C++17)
-g++ consumer/consumer.cpp -o consumer/consumer.out -std=c++17 -pthread
-g++ producer/producer.cpp -o producer/producer.out -std=c++17
-g++ web/web_server.cpp -o web/web_server.out -std=c++17
+# Step 2: Create Docker Network (if not already exists)
+docker network create media-net
 
-## In Terminal 1 – Run the consumer (multithreaded upload handler)
-./consumer/consumer.out
+# Step 3: Run Each Component in a Separate Terminal
 
-## In Terminal 2 – Run the producer (sends files from folders)
-./producer/producer.out
+# --- Terminal 1: Run the Consumer (receiver)
+docker run -it --rm --name consumer --network media-net consumer-app
 
-## In Terminal 3 – Run the web server (video browser + upload support)
-./web/web_server.out
+# --- Terminal 2: Run the Producer (sender)
+docker run -it --rm --name producer \
+  --network media-net \
+  -v "$PWD/shared:/app/shared" \
+  producer-app
 
-## Access the frontend at:
-http://localhost:8080
+# --- Terminal 3: Run the Web Server (frontend viewer)
+docker run -it --rm --name web-server \
+  -p 8080:8080 \
+  --network media-net \
+  web-server-app
 
-# FOR WINDOWS (MinGW)
-
-## Compile all components
-g++ consumer/consumer.cpp -o consumer/consumer.exe -std=c++17 -lws2_32 -pthread
-g++ producer/producer.cpp -o producer/producer.exe -std=c++17 -lws2_32
-g++ web/web_server.cpp -o web/web_server.exe -std=c++17
-
-## In Command Prompt 1 (run the consumer/server)
-consumer\consumer.exe
-
-## In Command Prompt 2 (run the producer/client)
-producer\producer.exe
-
-## In Command Prompt 3 (run the web server)
-web\web_server.exe
-
-## Access the frontend at:
-http://localhost:8080
+# Step 4: Access the Frontend in Browser
+# Open http://localhost:8080 in your browser
